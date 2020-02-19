@@ -32,12 +32,15 @@ public class RedisSessionManager extends ManagerBase {
 
   private final Log log = LogFactory.getLog(RedisSessionManager.class);
 
+  protected int maxInactiveInterval=30;
   protected String host = "localhost";
   protected int port = 6379;
   protected int database = 0;
   protected String password = null;
   protected int timeout = Protocol.DEFAULT_TIMEOUT;
   protected String sentinelMaster = null;
+
+  protected  String sessionPrefix="";
   Set<String> sentinelSet = null;
 
   protected Pool<Jedis> connectionPool;
@@ -56,10 +59,7 @@ public class RedisSessionManager extends ManagerBase {
 
   protected EnumSet<SessionPersistPolicy> sessionPersistPoliciesSet = EnumSet.of(SessionPersistPolicy.DEFAULT);
 
-  /**
-   * The lifecycle event support for this component.
-   */
-//  protected LifecycleSupport lifecycle = new LifecycleSupport(this);
+
 
   public String getHost() {
     return host;
@@ -167,6 +167,10 @@ public class RedisSessionManager extends ManagerBase {
     this.sentinelMaster = master;
   }
 
+  public void setMaxInactiveInterval(int maxInactiveInterval) {
+    this.maxInactiveInterval = maxInactiveInterval;
+  }
+
   @Override
   public int getRejectedSessions() {
     // Essentially do nothing.
@@ -208,36 +212,6 @@ public class RedisSessionManager extends ManagerBase {
   public void unload() throws IOException {
 
   }
-//
-//  /**
-//   * Add a lifecycle event listener to this component.
-//   *
-//   * @param listener The listener to add
-//   */
-//  @Override
-//  public void addLifecycleListener(LifecycleListener listener) {
-//    lifecycle.addLifecycleListener(listener);
-//  }
-//
-//  /**
-//   * Get the lifecycle listeners associated with this lifecycle. If this
-//   * Lifecycle has no listeners registered, a zero-length array is returned.
-//   */
-//  @Override
-//  public LifecycleListener[] findLifecycleListeners() {
-//    return lifecycle.findLifecycleListeners();
-//  }
-//
-//
-//  /**
-//   * Remove a lifecycle event listener from this component.
-//   *
-//   * @param listener The listener to remove
-//   */
-//  @Override
-//  public void removeLifecycleListener(LifecycleListener listener) {
-//    lifecycle.removeLifecycleListener(listener);
-//  }
 
   /**
    * Start this component and implement the requirements
@@ -285,7 +259,11 @@ public class RedisSessionManager extends ManagerBase {
 
 
   public int getMaxInactiveInterval() {
-    return getContext().getSessionTimeout()*60;
+    if(maxInactiveInterval==30){
+      return getContext().getSessionTimeout()*60;
+    }
+
+    return maxInactiveInterval*60;
   }
 
   /**
@@ -378,12 +356,20 @@ public class RedisSessionManager extends ManagerBase {
     return session;
   }
 
+  public String getSessionPrefix() {
+    return sessionPrefix;
+  }
+
+  public void setSessionPrefix(String sessionPrefix) {
+    this.sessionPrefix = sessionPrefix;
+  }
+
   private String sessionIdWithJvmRoute(String sessionId, String jvmRoute) {
     if (jvmRoute != null) {
       String jvmRoutePrefix = '.' + jvmRoute;
-      return sessionId.endsWith(jvmRoutePrefix) ? sessionId : sessionId + jvmRoutePrefix;
+      return getSessionPrefix()+(sessionId.endsWith(jvmRoutePrefix) ? sessionId : sessionId + jvmRoutePrefix);
     }
-    return sessionId;
+    return getSessionPrefix()+sessionId;
   }
 
   @Override
@@ -695,12 +681,6 @@ public class RedisSessionManager extends ManagerBase {
     serializer = (Serializer) Class.forName(serializationStrategyClass).newInstance();
 
     Loader loader = null;
-    /**
-     * tomcat 7
-     */
-    if (getContext() != null) {
-      loader = getContext().getLoader();
-    }
     /**
      * tomcat 8
      */
