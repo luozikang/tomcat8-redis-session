@@ -6,10 +6,8 @@ import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
 import redis.clients.jedis.*;
 import redis.clients.util.Pool;
-
 import java.io.IOException;
 import java.util.*;
-
 
 public class RedisSessionManager extends ManagerBase {
 
@@ -503,7 +501,9 @@ public class RedisSessionManager extends ManagerBase {
 
       session.setId(id);
       session.setNew(false);
-      session.setMaxInactiveInterval(getMaxInactiveInterval());
+      //keep set session Inactive
+//      session.setMaxInactiveInterval(getMaxInactiveInterval());
+
       session.access();
       session.setValid(true);
       session.resetDirtyTracking();
@@ -592,10 +592,15 @@ public class RedisSessionManager extends ManagerBase {
       }
 
       log.trace("Setting expire timeout on session [" + redisSession.getId() + "] to " + getMaxInactiveInterval());
-      jedis.expire(binaryId, getMaxInactiveInterval());
-
+      int maxInactiveInterval = redisSession.getMaxInactiveInterval();
+      /**
+       * session setting maxInactiveTime lever gt manager
+       */
+      if(maxInactiveInterval==-1){
+        maxInactiveInterval =getMaxInactiveInterval();
+      }
+      jedis.expire(binaryId, maxInactiveInterval);
       error = false;
-
       return error;
     } catch (IOException e) {
       log.error(e.getMessage());

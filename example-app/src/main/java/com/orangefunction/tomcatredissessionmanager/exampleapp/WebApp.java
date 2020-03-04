@@ -1,26 +1,25 @@
 package com.orangefunction.tomcatredissessionmanager.exampleapp;
 
-import java.util.Map;
-import java.util.Map.Entry;
-import java.util.HashMap;
-import java.util.Set;
-import static spark.Spark.*;
-import spark.*;
-import redis.clients.jedis.JedisPool;
-import redis.clients.jedis.JedisPoolConfig;
-import redis.clients.jedis.Jedis;
-import redis.clients.jedis.Protocol;
-import com.orangefunction.tomcat.redissessions.*;
-import org.apache.catalina.session.StandardSession;
-import org.apache.catalina.session.StandardSessionFacade;
-import org.apache.catalina.core.ApplicationContextFacade;
+import com.orangefunction.tomcat.redissessions.RedisSessionManager;
 import org.apache.catalina.core.ApplicationContext;
+import org.apache.catalina.core.ApplicationContextFacade;
 import org.apache.catalina.core.StandardContext;
-import java.lang.reflect.Field;
-import javax.servlet.*;
-
 import org.apache.juli.logging.Log;
 import org.apache.juli.logging.LogFactory;
+import redis.clients.jedis.Jedis;
+import redis.clients.jedis.JedisPool;
+import redis.clients.jedis.JedisPoolConfig;
+import redis.clients.jedis.Protocol;
+import spark.QueryParamsMap;
+import spark.Request;
+import spark.Response;
+import spark.Session;
+import java.lang.reflect.Field;
+import java.util.HashMap;
+import java.util.Map;
+import java.util.Map.Entry;
+import java.util.Set;
+import static spark.Spark.*;
 
 public class WebApp implements spark.servlet.SparkApplication {
 
